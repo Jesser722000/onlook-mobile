@@ -133,9 +133,22 @@ export default async function handler(req, res) {
                 const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
 
                 if (!uploadError) {
+                    // Method 1: SDK
                     const publicDataResponse = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
                     publicDataString = JSON.stringify(publicDataResponse);
-                    publicUrl = publicDataResponse.data.publicUrl;
+
+                    if (publicDataResponse?.data?.publicUrl) {
+                        publicUrl = publicDataResponse.data.publicUrl;
+                    } else {
+                        // Method 2: Manual Fallback
+                        const supabaseUrl = process.env.SUPABASE_URL; // e.g. https://id.supabase.co
+                        // Standard format: https://id.supabase.co/storage/v1/object/public/bucket/file
+                        // Ensure no double slash if env var has trailing slash
+                        const baseUrl = supabaseUrl.replace(/\/$/, "");
+                        publicUrl = `${baseUrl}/storage/v1/object/public/${BUCKET_NAME}/${fileName}`;
+                        publicDataString = `Fallback used. Manual: ${publicUrl}`;
+                    }
+
                 } else {
                     console.error("Upload Error:", uploadError);
                     uploadErrorMsg = JSON.stringify(uploadError);
