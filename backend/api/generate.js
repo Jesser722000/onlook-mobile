@@ -104,8 +104,7 @@ export default async function handler(req, res) {
                 model: "gpt-image-1.5",
                 image: images, // Assuming this array signature is correct for the specific model setup user has
                 prompt: textPrompt,
-                size: size,
-                response_format: "b64_json"
+                size: size
             }));
 
             console.log("OpenAI Response Received");
