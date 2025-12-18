@@ -79,7 +79,11 @@ export const generateImage = async (
         return {
             success: true,
             imageUrl: data.imageUrl,
-            remainingCredits: data.remainingCredits
+            remainingCredits: data.remainingCredits,
+            debug_upload_error: data.debug_upload_error,
+            debug_public_url: data.debug_public_url,
+            debug_public_data: data.debug_public_data,
+            version_timestamp: data.version_timestamp
         };
 
     } catch (error: any) {
