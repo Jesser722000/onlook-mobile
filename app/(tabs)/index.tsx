@@ -1,4 +1,6 @@
 import BasePhoto from '@/components/BasePhoto';
+import { CreditBadge } from '@/components/CreditBadge';
+import { GenerationsGrid } from '@/components/GenerationsGrid';
 import { useAuth } from '@/context/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { generateImage } from '@/services/api';
@@ -9,10 +11,11 @@ import { ActivityIndicator, Alert, Button, Image, ScrollView, StyleSheet, Text, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
-  const { session } = useAuth();
+  const { session, refreshCredits } = useAuth();
   const [productImage, setProductImage] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -50,6 +53,11 @@ export default function HomeScreen() {
       if (response.success && response.imageUrl) {
         setGeneratedImage(response.imageUrl);
         Alert.alert('Success!', `Generated! Remaining Credits: ${response.remainingCredits}`);
+
+        // Refresh data
+        await refreshCredits();
+        setRefreshKey(prev => prev + 1); // Helper to reload grid
+
       } else {
         Alert.alert('Error', response.error || 'Something went wrong.');
       }
@@ -64,7 +72,10 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>OnLook Mobile</Text>
+          <View>
+            <Text style={styles.title}>OnLook Mobile</Text>
+            <CreditBadge />
+          </View>
           <Button title="Sign Out" onPress={handleLogout} color="red" />
         </View>
 
@@ -108,6 +119,14 @@ export default function HomeScreen() {
             <Image source={{ uri: generatedImage }} style={styles.resultImage} />
           </View>
         )}
+
+        <View style={styles.divider} />
+
+        {/* 5. Past Generations */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>My Closet</Text>
+          <GenerationsGrid key={refreshKey} />
+        </View>
 
       </ScrollView>
     </SafeAreaView>

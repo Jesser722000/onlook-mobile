@@ -122,6 +122,20 @@ export default async function handler(req, res) {
                 throw new Error("No image data (b64 or url) returned from OpenAI");
             }
 
+            // --- UPLOAD TO STORAGE ---
+            let publicUrl = null;
+            const BUCKET_NAME = 'onlook_public';
+            try {
+                const fileName = `${crypto.randomUUID()}.jpg`;
+                const buffer = Buffer.from(resultBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+                const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
+
+                if (!uploadError) {
+                    const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+                    publicUrl = publicData.publicUrl;
+                }
+            } catch (storageErr) { console.error(storageErr); }
+
             // --- LOG SUCCESS ---
             await supabase.from('generations').insert({
                 user_email: secureEmail,
@@ -129,7 +143,8 @@ export default async function handler(req, res) {
                 cost_in_credits: 1,
                 provider: 'openai',
                 model: 'gpt-image-1.5',
-                duration_ms: Date.now() - startTime
+                duration_ms: Date.now() - startTime,
+                image_url: publicUrl // Save the URL!
             });
 
         } catch (genError) {
@@ -149,19 +164,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: `DEBUG INFO: ${genError.message}` });
         }
 
-        // --- UPLOAD TO STORAGE ---
-        let publicUrl = null;
-        const BUCKET_NAME = 'onlook_public';
-        try {
-            const fileName = `${crypto.randomUUID()}.jpg`;
-            const buffer = Buffer.from(resultBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');
-            const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
 
-            if (!uploadError) {
-                const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-                publicUrl = publicData.publicUrl;
-            }
-        } catch (storageErr) { console.error(storageErr); }
 
         return res.status(200).json({
             success: true,

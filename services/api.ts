@@ -90,3 +90,40 @@ export const generateImage = async (
         };
     }
 };
+
+export const fetchUserGenerations = async () => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) throw new Error('User not authenticated');
+
+        const { data, error } = await supabase
+            .from('generations')
+            .select('*')
+            .eq('user_email', session.user.email)
+            .eq('status', 'success')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error fetching generations:', error);
+        return [];
+    }
+};
+
+export const fetchUserCredits = async () => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.user) return 0;
+
+        const { data, error } = await supabase.rpc('get_credit_balance', {
+            p_user_id: session.user.id
+        });
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error fetching credits:', error);
+        return 0; // Default to 0 on error
+    }
+};

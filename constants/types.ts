@@ -13,3 +13,12 @@ export type GenerationRequest = {
     promptMode?: string;
     aspectRatio?: 'portrait' | 'landscape' | 'square';
 };
+
+export type Generation = {
+    id: number;
+    created_at: string;
+    image_url: string; // The public URL from Supabase Storage
+    model: string;
+    prompt: string;
+    status: string;
+};
