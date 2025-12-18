@@ -95,7 +95,7 @@ export default async function handler(req, res) {
             console.log("Calling OpenAI Images API (Edit)...");
 
             // CALL API
-            let size = "1024x1792"; // Mobile Optimized
+            let size = "1024x1536"; // Mobile Optimized
             if (aspectRatio === 'square') size = "1024x1024";
 
             // Note: gpt-image-1.5 supports varying sizes
