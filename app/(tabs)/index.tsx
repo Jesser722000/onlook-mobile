@@ -1,98 +1,180 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import BasePhoto from '@/components/BasePhoto';
+import { useAuth } from '@/context/AuthProvider';
+import { supabase } from '@/lib/supabase';
+import { generateImage } from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Button, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { session } = useAuth();
+  const [productImage, setProductImage] = useState<string | null>(null);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const pickProductImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct enum usage
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setProductImage(result.assets[0].uri);
+      setGeneratedImage(null); // Reset previous result
+    }
+  };
+
+  const handleGenerate = async () => {
+    const basePhotoUri = await AsyncStorage.getItem('base_photo_uri');
+
+    if (!basePhotoUri) {
+      Alert.alert('Missing Info', 'Please select a Base Photo first.');
+      return;
+    }
+    if (!productImage) {
+      Alert.alert('Missing Info', 'Please select a Product Image (Clothing).');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await generateImage(basePhotoUri, productImage);
+
+      if (response.success && response.imageUrl) {
+        setGeneratedImage(response.imageUrl);
+        Alert.alert('Success!', `Generated! Remaining Credits: ${response.remainingCredits}`);
+      } else {
+        Alert.alert('Error', response.error || 'Something went wrong.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>OnLook Mobile</Text>
+          <Button title="Sign Out" onPress={handleLogout} color="red" />
+        </View>
+
+        {/* 1. Base Photo */}
+        <View style={styles.section}>
+          <BasePhoto />
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* 2. Product Photo */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>2. Pick Clothing</Text>
+          <TouchableOpacity onPress={pickProductImage} style={styles.imagePicker}>
+            {productImage ? (
+              <Image source={{ uri: productImage }} style={styles.image} />
+            ) : (
+              <View style={styles.placeholder}>
+                <Text style={styles.placeholderText}>Tap to select product</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* 3. Action */}
+        <View style={styles.section}>
+          <Button
+            title={loading ? "Generating..." : "Generate Try-On"}
+            onPress={handleGenerate}
+            disabled={loading || !productImage}
+          />
+          {loading && <ActivityIndicator style={{ marginTop: 10 }} />}
+        </View>
+
+        {/* 4. Result */}
+        {generatedImage && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Result</Text>
+            <Image source={{ uri: generatedImage }} style={styles.resultImage} />
+          </View>
+        )}
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 50,
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  section: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  imagePicker: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  resultImage: {
+    width: 300,
+    height: 400,
+    borderRadius: 10,
+    marginTop: 10,
+    backgroundColor: '#eee',
+  },
+  placeholder: {
+    padding: 20,
+  },
+  placeholderText: {
+    color: '#888',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 20,
+    width: '100%',
   },
 });
