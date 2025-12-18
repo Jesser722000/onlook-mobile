@@ -176,7 +176,9 @@ export default async function handler(req, res) {
             success: true,
             imageUrl: publicUrl || resultBase64,
             remainingCredits: remainingCredits,
-            debug_upload_error: uploadErrorMsg
+            debug_upload_error: uploadErrorMsg,
+            debug_public_url: publicUrl,
+            debug_bucket: 'onlook_public'
         });
 
     } catch (error) {

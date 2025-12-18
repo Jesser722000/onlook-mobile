@@ -56,7 +56,7 @@ export default function HomeScreen() {
         if (response.debug_upload_error) {
           Alert.alert('Upload Failed', `Generated but NOT Saved: ${response.debug_upload_error}`);
         } else {
-          Alert.alert('Success!', `Generated! Remaining Credits: ${response.remainingCredits}`);
+          Alert.alert('Success!', `Generated! Saving URL: ${response.debug_public_url}`);
         }
 
         // Refresh data
