@@ -47,7 +47,11 @@ export default async function handler(req, res) {
 
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) {
-            return res.status(401).json({ error: 'unauthorized', message: 'Invalid or expired session.' });
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Invalid or expired session.',
+                debug_server_url: process.env.SUPABASE_URL // SHOW ME WHERE YOU ARE CONNECTED
+            });
         }
 
         const userId = user.id;

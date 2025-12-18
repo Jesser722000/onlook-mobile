@@ -36,10 +36,14 @@ export const GenerationsGrid = () => {
                 source={{ uri: item.image_url }}
                 style={styles.image}
                 resizeMode="cover"
+                onError={(e) => console.log("Image Load Error:", e.nativeEvent.error)}
             />
-            <Text style={{ color: 'red', fontSize: 10, position: 'absolute', bottom: 5, left: 5, backgroundColor: 'white', padding: 2 }}>
-                {item.image_url ? "LINK OK" : "NULL"}
-            </Text>
+            {/* DEBUG OVERLAY */}
+            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', padding: 4 }}>
+                <Text style={{ color: 'white', fontSize: 8 }} numberOfLines={2}>
+                    {item.image_url || "NULL"}
+                </Text>
+            </View>
         </View>
     );
 
