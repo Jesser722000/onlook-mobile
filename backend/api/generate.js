@@ -69,6 +69,7 @@ export default async function handler(req, res) {
         let resultBase64;
         let publicUrl = null;
         let uploadErrorMsg = null;
+        let publicDataString = null;
 
         try {
             // PROMPT LOGIC
@@ -132,8 +133,9 @@ export default async function handler(req, res) {
                 const { error: uploadError } = await supabase.storage.from(BUCKET_NAME).upload(fileName, buffer, { contentType: 'image/jpeg', upsert: false });
 
                 if (!uploadError) {
-                    const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-                    publicUrl = publicData.publicUrl;
+                    const publicDataResponse = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+                    publicDataString = JSON.stringify(publicDataResponse);
+                    publicUrl = publicDataResponse.data.publicUrl;
                 } else {
                     console.error("Upload Error:", uploadError);
                     uploadErrorMsg = JSON.stringify(uploadError);
@@ -178,6 +180,7 @@ export default async function handler(req, res) {
             remainingCredits: remainingCredits,
             debug_upload_error: uploadErrorMsg,
             debug_public_url: publicUrl,
+            debug_public_data: publicDataString,
             debug_bucket: 'onlook_public'
         });
 

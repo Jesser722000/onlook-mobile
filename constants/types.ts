@@ -6,6 +6,7 @@ export type GenerationResponse = {
     message?: string;
     debug_upload_error?: string;
     debug_public_url?: string;
+    debug_public_data?: string;
 };
 
 export type GenerationRequest = {
