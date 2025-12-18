@@ -67,6 +67,7 @@ export default async function handler(req, res) {
         // --- STEP 3: GENERATE WITH OPENAI IMAGES API (EDIT) ---
         const startTime = Date.now();
         let resultBase64;
+        let publicUrl = null;
 
         try {
             // PROMPT LOGIC
@@ -123,7 +124,6 @@ export default async function handler(req, res) {
             }
 
             // --- UPLOAD TO STORAGE ---
-            let publicUrl = null;
             const BUCKET_NAME = 'onlook_public';
             try {
                 const fileName = `${crypto.randomUUID()}.jpg`;

@@ -116,14 +116,23 @@ export const fetchUserCredits = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session || !session.user) return 0;
 
-        const { data, error } = await supabase.rpc('get_credit_balance', {
-            p_user_id: session.user.id
+        // Call our new backend endpoint to bypass RLS/RPC issues
+        const response = await fetch(API_URL.replace('/generate', '/credits'), {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+            }
         });
 
-        if (error) throw error;
-        return data;
+        if (!response.ok) {
+            console.error('Failed to fetch credits');
+            return 0;
+        }
+
+        const data = await response.json();
+        return data.credits || 0;
     } catch (error) {
         console.error('Error fetching credits:', error);
-        return 0; // Default to 0 on error
+        return 0;
     }
 };
