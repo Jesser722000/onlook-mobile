@@ -125,6 +125,7 @@ export default async function handler(req, res) {
 
             // --- UPLOAD TO STORAGE ---
             const BUCKET_NAME = 'onlook_public';
+            let uploadErrorMsg = null;
             try {
                 const fileName = `${crypto.randomUUID()}.jpg`;
                 const buffer = Buffer.from(resultBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');
@@ -133,8 +134,14 @@ export default async function handler(req, res) {
                 if (!uploadError) {
                     const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
                     publicUrl = publicData.publicUrl;
+                } else {
+                    console.error("Upload Error:", uploadError);
+                    uploadErrorMsg = JSON.stringify(uploadError);
                 }
-            } catch (storageErr) { console.error(storageErr); }
+            } catch (storageErr) {
+                console.error(storageErr);
+                uploadErrorMsg = storageErr.message;
+            }
 
             // --- LOG SUCCESS ---
             await supabase.from('generations').insert({
@@ -165,11 +172,11 @@ export default async function handler(req, res) {
         }
 
 
-
         return res.status(200).json({
             success: true,
             imageUrl: publicUrl || resultBase64,
-            remainingCredits: remainingCredits
+            remainingCredits: remainingCredits,
+            debug_upload_error: uploadErrorMsg
         });
 
     } catch (error) {

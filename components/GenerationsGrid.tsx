@@ -37,6 +37,9 @@ export const GenerationsGrid = () => {
                 style={styles.image}
                 resizeMode="cover"
             />
+            <Text style={{ color: 'red', fontSize: 10, position: 'absolute', bottom: 5, left: 5, backgroundColor: 'white', padding: 2 }}>
+                {item.image_url ? "LINK OK" : "NULL"}
+            </Text>
         </View>
     );
 
