@@ -52,7 +52,12 @@ export default function HomeScreen() {
 
       if (response.success && response.imageUrl) {
         setGeneratedImage(response.imageUrl);
-        Alert.alert('Success!', `Generated! Remaining Credits: ${response.remainingCredits}`);
+
+        if (response.debug_upload_error) {
+          Alert.alert('Upload Failed', `Generated but NOT Saved: ${response.debug_upload_error}`);
+        } else {
+          Alert.alert('Success!', `Generated! Remaining Credits: ${response.remainingCredits}`);
+        }
 
         // Refresh data
         await refreshCredits();

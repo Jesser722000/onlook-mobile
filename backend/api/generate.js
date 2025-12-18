@@ -68,6 +68,7 @@ export default async function handler(req, res) {
         const startTime = Date.now();
         let resultBase64;
         let publicUrl = null;
+        let uploadErrorMsg = null;
 
         try {
             // PROMPT LOGIC
@@ -125,7 +126,6 @@ export default async function handler(req, res) {
 
             // --- UPLOAD TO STORAGE ---
             const BUCKET_NAME = 'onlook_public';
-            let uploadErrorMsg = null;
             try {
                 const fileName = `${crypto.randomUUID()}.jpg`;
                 const buffer = Buffer.from(resultBase64.replace(/^data:image\/\w+;base64,/, ""), 'base64');

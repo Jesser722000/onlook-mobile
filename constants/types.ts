@@ -4,6 +4,7 @@ export type GenerationResponse = {
     remainingCredits?: number;
     error?: string;
     message?: string;
+    debug_upload_error?: string;
 };
 
 export type GenerationRequest = {
