@@ -1,7 +1,7 @@
 import { GenerationRequest, GenerationResponse } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://your-vercel-backend.vercel.app/api/generate_v2';
+export const API_URL = 'https://onlook-mobile-backend.vercel.app/api/generate_v2';
 
 // Helper: Convert File URI to Base64
 export const uriToBase64 = async (uri: string): Promise<string> => {
