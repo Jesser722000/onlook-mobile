@@ -7,6 +7,7 @@ export type GenerationResponse = {
     debug_upload_error?: string;
     debug_public_url?: string;
     debug_public_data?: string;
+    version_timestamp?: string;
 };
 
 export type GenerationRequest = {

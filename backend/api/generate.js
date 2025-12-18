@@ -194,7 +194,8 @@ export default async function handler(req, res) {
             debug_upload_error: uploadErrorMsg,
             debug_public_url: publicUrl,
             debug_public_data: publicDataString,
-            debug_bucket: 'onlook_public'
+            debug_bucket: 'onlook_public',
+            version_timestamp: '2025-12-18T13:00-ForceUpdate'
         });
 
     } catch (error) {
