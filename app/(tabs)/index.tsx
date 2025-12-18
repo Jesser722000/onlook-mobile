@@ -3,7 +3,7 @@ import { CreditBadge } from '@/components/CreditBadge';
 import { GenerationsGrid } from '@/components/GenerationsGrid';
 import { useAuth } from '@/context/AuthProvider';
 import { supabase } from '@/lib/supabase';
-import { generateImage } from '@/services/api';
+import { API_URL, generateImage } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
@@ -56,7 +56,7 @@ export default function HomeScreen() {
         if (response.debug_upload_error) {
           Alert.alert('Upload Failed', `Generated but NOT Saved: ${response.debug_upload_error}`);
         } else {
-          Alert.alert('Success!', `Ver: ${response.version_timestamp}\nURL: ${response.debug_public_url}\nData: ${response.debug_public_data}`);
+          Alert.alert('Success!', `Target: ${API_URL}\nVer: ${response.version_timestamp}\nURL: ${response.debug_public_url}\nData: ${response.debug_public_data}`);
         }
 
         // Refresh data
